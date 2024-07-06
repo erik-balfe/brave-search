@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Erik Balfe
+// Copyright (C) 2024 Erik Balfe
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -151,7 +151,6 @@ class BraveSearch {
     for (let attempt = 0; attempt < this.maxPollAttempts; attempt++) {
       const summaryResponse = await this.summarizerSearch(key, options);
 
-      console.warn("summary", summaryResponse);
       if (summaryResponse.status === "complete" && summaryResponse.summary) {
         return summaryResponse;
       } else if (summaryResponse.status === "failed") {
