@@ -1,6 +1,6 @@
 {
   "name": "brave-search",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "A TypeScript library for interacting with the Brave Search API, including web search, local POI search, and automatic summarization features.",
   "scripts": {
     "build": "tsc",
@@ -12,6 +12,24 @@
     "dist",
     "LICENSE",
     "README.md"
+  ],
+  "keywords": [
+    "brave",
+    "web-search",
+    "brave-search",
+    "search",
+    "api",
+    "search-engine",
+    "web-search",
+    "web-api",
+    "search-results",
+    "data-retrieval",
+    "information-retrieval",
+    "internet-search",
+    "brave-api",
+    "search-integration",
+    "web-scraping",
+    "data-mining"
   ],
   "author": "erik.balfe@protonmail.com",
   "repository": {
