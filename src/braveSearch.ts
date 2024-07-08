@@ -15,6 +15,8 @@
 
 import axios from "axios";
 
+const DEFAULT_POLLING_TIMEOUT = 20000;
+
 import {
   BraveSearchOptions,
   LocalDescriptionsOptions,
@@ -27,17 +29,20 @@ import {
 } from "./types";
 
 class BraveSearchError extends Error {
-  constructor(message: string) {
+  public responseData: any;
+
+  constructor(message: string, responseData?: any) {
     super(message);
     this.name = "BraveSearchError";
+    this.responseData = responseData;
   }
 }
 
 class BraveSearch {
   private apiKey: string;
   private baseUrl = "https://api.search.brave.com/res/v1";
-  private maxPollAttempts = 5;
   private pollInterval = 500;
+  private maxPollAttempts = DEFAULT_POLLING_TIMEOUT / this.pollInterval;
 
   constructor(
     apiKey: string,
@@ -68,7 +73,32 @@ class BraveSearch {
       );
       return response.data;
     } catch (error) {
-      throw this.handleApiError(error);
+      const handledError = this.handleApiError(error);
+      if (
+        handledError.message.includes(
+          "Retrying with modified 'result_filter' option in request",
+        )
+      ) {
+        // Retry the request with a modified result_filter
+        const modifiedParams = new URLSearchParams(params);
+        modifiedParams.set(
+          "result_filter",
+          "discussions,faq,news,query,summarizer,videos,web,infobox",
+        );
+
+        try {
+          const response = await axios.get<WebSearchApiResponse>(
+            `${this.baseUrl}/web/search?${modifiedParams.toString()}`,
+            {
+              headers: this.getHeaders(),
+            },
+          );
+          return response.data;
+        } catch (retryError) {
+          throw this.handleApiError(retryError);
+        }
+      }
+      throw handledError;
     }
   }
 
@@ -208,13 +238,32 @@ class BraveSearch {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
       const message = error.response?.data?.message || error.message;
+      const responseData = error.response?.data;
 
       if (status === 429) {
-        return new BraveSearchError(`Rate limit exceeded: ${message}`);
+        return new BraveSearchError(
+          `Rate limit exceeded: ${message}`,
+          responseData,
+        );
       } else if (status === 401) {
-        return new BraveSearchError(`Authentication error: ${message}`);
+        return new BraveSearchError(
+          `Authentication error: ${message}`,
+          responseData,
+        );
+      } else if (status === 422) {
+        // Handle the specific 422 error related to 'result_filter' param
+        console.warn(
+          "Received 422 error, possibly related to brave server error. Retrying with modified 'result_filter' option in request.",
+        );
+        return new BraveSearchError(
+          `API error (${status}): ${message}. Retrying with modified 'result_filter' option in request.`,
+          responseData,
+        );
       } else {
-        return new BraveSearchError(`API error (${status}): ${message}`);
+        return new BraveSearchError(
+          `API error (${status}): ${message}`,
+          responseData,
+        );
       }
     }
     return new BraveSearchError(`Unexpected error: ${error.message}`);
