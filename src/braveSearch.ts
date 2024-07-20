@@ -68,23 +68,6 @@ class BraveSearch {
       return response.data;
     } catch (error) {
       const handledError = this.handleApiError(error);
-      if (handledError.message.includes("Retrying with modified 'result_filter' option in request")) {
-        // Retry the request with a modified result_filter
-        const modifiedParams = new URLSearchParams(params);
-        modifiedParams.set("result_filter", "discussions,faq,news,query,summarizer,videos,web,infobox");
-
-        try {
-          const response = await axios.get<WebSearchApiResponse>(
-            `${this.baseUrl}/web/search?${modifiedParams.toString()}`,
-            {
-              headers: this.getHeaders(),
-            },
-          );
-          return response.data;
-        } catch (retryError) {
-          throw this.handleApiError(retryError);
-        }
-      }
       throw handledError;
     }
   }
@@ -227,15 +210,6 @@ class BraveSearch {
         return new BraveSearchError(`Rate limit exceeded: ${message}`, responseData);
       } else if (status === 401) {
         return new BraveSearchError(`Authentication error: ${message}`, responseData);
-      } else if (status === 422) {
-        // Handle the specific 422 error related to 'result_filter' param
-        console.warn(
-          "Received 422 error, possibly related to brave server error. Retrying with modified 'result_filter' option in request.",
-        );
-        return new BraveSearchError(
-          `API error (${status}): ${message}. Retrying with modified 'result_filter' option in request.`,
-          responseData,
-        );
       } else {
         return new BraveSearchError(`API error (${status}): ${message}`, responseData);
       }
