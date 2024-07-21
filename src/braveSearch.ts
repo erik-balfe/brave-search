@@ -258,7 +258,6 @@ export {
   BraveSearch,
   BraveSearchError,
   type BraveSearchOptions,
-  type LocalDescriptionsOptions,
   type LocalDescriptionsSearchApiResponse,
   type LocalPoiSearchApiResponse,
   type SummarizerOptions,
