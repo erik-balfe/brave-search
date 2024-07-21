@@ -1,6 +1,6 @@
 # Brave Search API wrapper
 
-A fully typed Brave Search API wrapper, providing easy access to web search, local POI search, and automatic polling for web search summary feature.
+A fully typed Brave Search API wrapper, providing easy access to web search, local POI search, and automatic polling for AI generated web search summary feature.
 
 ## Installation
 

@@ -19,9 +19,7 @@ const DEFAULT_POLLING_TIMEOUT = 20000;
 
 import {
   BraveSearchOptions,
-  LocalDescriptionsOptions,
   LocalDescriptionsSearchApiResponse,
-  LocalPoiOptions,
   LocalPoiSearchApiResponse,
   SummarizerOptions,
   SummarizerSearchApiResponse,
@@ -134,13 +132,11 @@ class BraveSearch {
   /**
    * Searches for local points of interest using the provided IDs and options.
    * @param ids The IDs of the local points of interest.
-   * @param options Optional settings to configure the search behavior.
    * @returns A promise that resolves to the search results.
    */
-  async localPoiSearch(ids: string[], options: LocalPoiOptions = {}): Promise<LocalPoiSearchApiResponse> {
+  async localPoiSearch(ids: string[]): Promise<LocalPoiSearchApiResponse> {
     const params = new URLSearchParams({
       ids: ids.join(","),
-      ...this.formatOptions(options),
     });
 
     try {
@@ -159,16 +155,11 @@ class BraveSearch {
   /**
    * Retrieves descriptions for local points of interest using the provided IDs and options.
    * @param ids The IDs of the local points of interest.
-   * @param options Optional settings to configure the search behavior.
    * @returns A promise that resolves to the search results.
    */
-  async localDescriptionsSearch(
-    ids: string[],
-    options: LocalDescriptionsOptions = {},
-  ): Promise<LocalDescriptionsSearchApiResponse> {
+  async localDescriptionsSearch(ids: string[]): Promise<LocalDescriptionsSearchApiResponse> {
     const params = new URLSearchParams({
       ids: ids.join(","),
-      ...this.formatOptions(options),
     });
 
     try {
@@ -269,7 +260,6 @@ export {
   type BraveSearchOptions,
   type LocalDescriptionsOptions,
   type LocalDescriptionsSearchApiResponse,
-  type LocalPoiOptions,
   type LocalPoiSearchApiResponse,
   type SummarizerOptions,
   type SummarizerSearchApiResponse,

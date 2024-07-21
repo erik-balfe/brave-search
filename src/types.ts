@@ -10,6 +10,9 @@
  */
 export type ResultFilter = string;
 
+/**
+ * Options for configuring a web search request to the Brave Search API.
+ */
 export interface BraveSearchOptions {
   /**
    * The search query country, where the results come from.
@@ -101,6 +104,9 @@ export interface BraveSearchOptions {
   summary?: boolean;
 }
 
+/**
+ * Options for configuring a AI summary answer content.
+ */
 export interface SummarizerOptions {
   /**
    * Returns extra entities info with the summary response.
@@ -110,16 +116,11 @@ export interface SummarizerOptions {
   entity_info?: boolean;
 }
 
-export interface LocalPoiOptions {
-  // Add any specific options for Local POI search if needed
-}
-
-export interface LocalDescriptionsOptions {
-  // Add any specific options for Local Descriptions search if needed
-}
-
 // Response types
 
+/**
+ * Response from the Brave Search API with different types of a web search content.
+ */
 export interface WebSearchApiResponse {
   /**
    * The type of web search API result. The value is always "search".
@@ -172,12 +173,15 @@ export interface WebSearchApiResponse {
    */
   web?: Search;
   /**
-   * Summary key to get summary results for the query.
+   * Summary key to get AI generated summary results for the query. (Handled automatically when using getSummarizedAnswer method, that polls for summary right after web search response returned)
    * @type {Summarizer}
    */
   summarizer?: Summarizer;
 }
 
+/**
+ * Response from the Brave Search API with AI generated summary of search results.
+ */
 export interface SummarizerSearchApiResponse {
   /**
    * The type of summarizer search API result. The value is always "summarizer".
@@ -216,6 +220,9 @@ export interface SummarizerSearchApiResponse {
   entities_infos?: { [key: string]: SummaryEntityInfo };
 }
 
+/**
+ * Response from the Brave Search API for a local points of interest (POI) search request.
+ */
 export interface LocalPoiSearchApiResponse {
   /**
    * The type of local POI search API result. The value is always "local_pois".
@@ -229,6 +236,9 @@ export interface LocalPoiSearchApiResponse {
   results: LocationResult[];
 }
 
+/**
+ * Response from the Brave Search API with Location descriptions.
+ */
 export interface LocalDescriptionsSearchApiResponse {
   /**
    * The type of local description search API result. The value is always "local_descriptions".
