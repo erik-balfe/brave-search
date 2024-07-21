@@ -11,7 +11,7 @@
 export type ResultFilter = string;
 
 /**
- * Options for configuring a web search request to the Brave Search API.
+ * Options for configuring a web search requests to the Brave Search API.
  */
 export interface BraveSearchOptions {
   /**
@@ -42,12 +42,23 @@ export interface BraveSearchOptions {
    * Filters search results by when they were discovered.
    * Can be a predefined option from the FreshnessOption enum or a custom date range string.
    * @type {Freshness}
-   * @example
-   * // Using a predefined freshness option
-   * const options = { freshness: FreshnessOption.PastWeek };
-   * @example
-   * // Using a custom date range string
-   * const customOptions = { freshness: "2022-01-01to2022-12-31" };
+   * @example Using predefined timeranges
+   * import { BraveSearch, FreshnessOption }
+   * const braveSearch = new BraveSearch('your-api-key', {
+   *   freshness: FreshnessOption.PastWeek
+   * });
+   * const resuls = await braveSearch.webSearch('some query', {
+   *   freshness: FreshnessOption.PastWeek
+   * });
+   *
+   * @example Using custom date range
+   * import { BraveSearch, FreshnessOption }
+   * const braveSearch = new BraveSearch('your-api-key', {
+   *   freshness: FreshnessOption.PastWeek
+   * });
+   * const resuls = await braveSearch.webSearch('some query', {
+   *   freshness: '2022-01-01to2022-12-31'
+   * });
    */
   freshness?: Freshness;
   /**
@@ -102,6 +113,24 @@ export interface BraveSearchOptions {
    * @type boolean
    */
   summary?: boolean;
+}
+
+/**
+ * Options for configuring polling behavior when waiting for summary results from the Brave Search API.
+ */
+export interface PollingOptions {
+  /**
+   * Interval in milliseconds between polling attempts for summary.
+   * @type {number}
+   * @default 500
+   */
+  pollInterval?: number;
+  /**
+   * Maximum number of attempts to poll for a summary.
+   * @type {number}
+   * @default 20
+   */
+  maxPollAttempts?: number;
 }
 
 /**

@@ -1,6 +1,6 @@
-# Brave Search API wrapper
+# Brave Search API Wrapper
 
-A fully typed Brave Search API wrapper, providing easy access to web search, local POI search, and automatic polling for AI generated web search summary feature.
+A fully typed Brave Search API wrapper, providing easy access to web search, local POI search, and automatic polling for AI-generated web search summary feature.
 
 ## Installation
 
@@ -57,7 +57,7 @@ import { BraveSearch } from "@tyr/brave-search/";
 Perform a web search using the `webSearch` method. Your IDE will provide type hints for the parameters and return types.
 
 ```typescript
-const webSearchResults = await braveSearch.webSearch("TypeScript tutorial", {
+const webSearchResults = await braveSearch.webSearch("How many stars there are in our galaxy?", {
   count: 5,
   safesearch: "off",
   search_lang: "en",
@@ -72,18 +72,15 @@ console.log(webSearchResults);
 Get a summarized answer for a query using the `getSummarizedAnswer` method. This method returns an object containing `summary` and `webSearch` promises.
 
 ```typescript
-const { summary, webSearch } = braveSearch.getSummarizedAnswer(
-  "How many stars there are in our galaxy?",
-  {
-    count: 5, // Number of search results to return
-    safesearch: "off", // Optional: Filter for adult content (default is "moderate")
-    search_lang: "en", // Optional: Language of the search results (default is "en")
-    country: "US", // Optional: Country for the search results (default is "us")
-    text_decorations: false, // Optional: Whether to include text decorations (default is true)
-    spellcheck: false, // Optional: Whether to enable spellcheck (default is true)
-    extra_snippets: true, // Optional: Whether to include extra snippets (default is false)
-  },
-);
+const { summary, webSearch } = braveSearch.getSummarizedAnswer("How many stars there are in our galaxy?", {
+  count: 5, // Number of search results to return
+  safesearch: "off", // Optional: Filter for adult content (default is "moderate")
+  search_lang: "en", // Optional: Language of the search results (default is "en")
+  country: "US", // Optional: Country for the search results (default is "us")
+  text_decorations: false, // Optional: Whether to include text decorations (default is true)
+  spellcheck: false, // Optional: Whether to enable spellcheck (default is true)
+  extra_snippets: true, // Optional: Whether to include extra snippets (default is false)
+});
 
 // Wait for the web search results (almost immediately)
 const webSearchResponse = await webSearch;
@@ -115,6 +112,17 @@ console.log(descriptionResults);
 ## Search Options
 
 The library supports various search options as defined in the Brave Search API documentation. For a complete list of options and their descriptions, please refer to the [Brave Search API Documentation](https://api.search.brave.com/app/documentation/web-search/).
+
+### Polling Options
+
+The `BraveSearch` class supports configurable polling options for summarization. You can customize the polling interval and the maximum number of polling attempts by passing a `PollingOptions` object to the constructor.
+
+```typescript
+const braveSearch = new BraveSearch(BRAVE_API_KEY, {
+  pollInterval: 1000, // (default is 500ms)
+  maxPollAttempts: 30, // (default is 20)
+});
+```
 
 ## Important Notes
 

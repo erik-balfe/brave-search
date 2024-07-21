@@ -15,12 +15,14 @@
 
 import axios from "axios";
 
-const DEFAULT_POLLING_TIMEOUT = 20000;
+const DEFAULT_POLLING_INTERVAL = 500;
+const DEFAULT_MAX_POLL_ATTEMPTS = 20;
 
 import {
   BraveSearchOptions,
   LocalDescriptionsSearchApiResponse,
   LocalPoiSearchApiResponse,
+  PollingOptions,
   SummarizerOptions,
   SummarizerSearchApiResponse,
   WebSearchApiResponse,
@@ -46,28 +48,24 @@ class BraveSearchError extends Error {
 }
 
 /**
- * The main class for interacting with the Brave Search API.
+ * The main class for interacting with the Brave Search API, holding API key for all the requests made with it.
  * It provides methods for web search, local POI search, and summarization.
  */
 class BraveSearch {
   private apiKey: string;
   private baseUrl = "https://api.search.brave.com/res/v1";
-  private pollInterval = 500;
-  private maxPollAttempts = DEFAULT_POLLING_TIMEOUT / this.pollInterval;
+  private pollInterval: number;
+  private maxPollAttempts: number;
 
   /**
    * Initializes a new instance of the BraveSearch class.
    * @param apiKey The API key for accessing the Brave Search API.
-   * @param options Optional settings to configure the search behavior.
-   *  - maxPollAttempts: Maximum number of attempts to poll for a summary.
-   *  - pollInterval: Interval in milliseconds between polling attempts.
+   * @param options
    */
-  constructor(apiKey: string, options?: { maxPollAttempts?: number; pollInterval?: number }) {
+  constructor(apiKey: string, options?: PollingOptions) {
     this.apiKey = apiKey;
-    if (options) {
-      this.maxPollAttempts = options.maxPollAttempts ?? this.maxPollAttempts;
-      this.pollInterval = options.pollInterval ?? this.pollInterval;
-    }
+    this.pollInterval = options?.pollInterval ?? DEFAULT_POLLING_INTERVAL;
+    this.maxPollAttempts = options?.maxPollAttempts ?? DEFAULT_MAX_POLL_ATTEMPTS;
   }
 
   /**
@@ -76,7 +74,11 @@ class BraveSearch {
    * @param options Optional settings to configure the search behavior.
    * @returns A promise that resolves to the search results.
    */
-  async webSearch(query: string, options: BraveSearchOptions = {}): Promise<WebSearchApiResponse> {
+  async webSearch(
+    query: string,
+    options: BraveSearchOptions = {},
+    signal?: AbortSignal,
+  ): Promise<WebSearchApiResponse> {
     const params = new URLSearchParams({
       q: query,
       ...this.formatOptions(options),
@@ -87,6 +89,7 @@ class BraveSearch {
         `${this.baseUrl}/web/search?${params.toString()}`,
         {
           headers: this.getHeaders(),
+          signal,
         },
       );
       return response.data;
@@ -97,7 +100,9 @@ class BraveSearch {
   }
 
   /**
-   * Executes a web search for the provided query and polls for a summary if available.
+   * Executes a web search for the provided query and polls for a summary
+   * if the query is eligible for a summary and summarizer key is provided in the web search response.
+   * The summary is usually ready within 2 seconds after the original web search response is received.
    * @param query The search query string.
    * @param options Optional settings to configure the search behavior.
    * @param summarizerOptions Optional settings specific to summarization.
@@ -107,17 +112,18 @@ class BraveSearch {
     query: string,
     options: Omit<BraveSearchOptions, "summary"> = {},
     summarizerOptions: SummarizerOptions = {},
+    signal?: AbortSignal,
   ): {
     summary: Promise<SummarizerSearchApiResponse | undefined>;
     webSearch: Promise<WebSearchApiResponse>;
   } {
     try {
-      const webSearchResponse = this.webSearch(query, options);
+      const webSearchResponse = this.webSearch(query, options, signal);
       const summaryPromise = webSearchResponse.then(async (webSearchResponse) => {
         const summarizerKey = webSearchResponse.summarizer?.key;
 
         if (summarizerKey) {
-          return await this.pollForSummary(summarizerKey, summarizerOptions);
+          return await this.pollForSummary(summarizerKey, summarizerOptions, signal);
         }
 
         return undefined;
@@ -134,7 +140,7 @@ class BraveSearch {
    * @param ids The IDs of the local points of interest.
    * @returns A promise that resolves to the search results.
    */
-  async localPoiSearch(ids: string[]): Promise<LocalPoiSearchApiResponse> {
+  async localPoiSearch(ids: string[], signal?: AbortSignal): Promise<LocalPoiSearchApiResponse> {
     const params = new URLSearchParams({
       ids: ids.join(","),
     });
@@ -144,6 +150,7 @@ class BraveSearch {
         `${this.baseUrl}/local/pois?${params.toString()}`,
         {
           headers: this.getHeaders(),
+          signal,
         },
       );
       return response.data;
@@ -157,7 +164,10 @@ class BraveSearch {
    * @param ids The IDs of the local points of interest.
    * @returns A promise that resolves to the search results.
    */
-  async localDescriptionsSearch(ids: string[]): Promise<LocalDescriptionsSearchApiResponse> {
+  async localDescriptionsSearch(
+    ids: string[],
+    signal?: AbortSignal,
+  ): Promise<LocalDescriptionsSearchApiResponse> {
     const params = new URLSearchParams({
       ids: ids.join(","),
     });
@@ -167,6 +177,7 @@ class BraveSearch {
         `${this.baseUrl}/local/descriptions?${params.toString()}`,
         {
           headers: this.getHeaders(),
+          signal,
         },
       );
       return response.data;
@@ -175,12 +186,31 @@ class BraveSearch {
     }
   }
 
+  /**
+   * Polls for a summary response after a web search request. This method is suggested by the Brave Search API documentation
+   * as the way to retrieve a summary after initiating a web search.
+   *
+   * @param key The key identifying the summary request.
+   * @param options Optional settings specific to summarization.
+   * @param signal Optional AbortSignal to cancel the request.
+   * @returns A promise that resolves to the summary response if available, or undefined if the summary is not ready.
+   * @throws {BraveSearchError} If the summary generation fails or if the summary is not available after maximum polling attempts.
+   *
+   * **Polling Behavior:**
+   * - The method will make up to 20 attempts to fetch the summary by default.
+   * - Each attempt is spaced 500ms apart.
+   * - If the summary is not ready after 20 attempts, a BraveSearchError is thrown.
+   *
+   * **Configuration:**
+   * - The number of attempts and the interval between attempts can be configured through the class constructor options.
+   */
   private async pollForSummary(
     key: string,
     options: SummarizerOptions,
+    signal?: AbortSignal,
   ): Promise<SummarizerSearchApiResponse | undefined> {
     for (let attempt = 0; attempt < this.maxPollAttempts; attempt++) {
-      const summaryResponse = await this.summarizerSearch(key, options);
+      const summaryResponse = await this.summarizerSearch(key, options, signal);
 
       if (summaryResponse.status === "complete" && summaryResponse.summary) {
         return summaryResponse;
@@ -197,6 +227,7 @@ class BraveSearch {
   private async summarizerSearch(
     key: string,
     options: SummarizerOptions,
+    signal?: AbortSignal,
   ): Promise<SummarizerSearchApiResponse> {
     const params = new URLSearchParams({
       key,
@@ -208,6 +239,7 @@ class BraveSearch {
         `${this.baseUrl}/summarizer/search?${params.toString()}`,
         {
           headers: this.getHeaders(),
+          signal,
         },
       );
       return response.data;
