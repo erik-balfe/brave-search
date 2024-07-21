@@ -74,7 +74,7 @@ class BraveSearch {
 
   getSummarizedAnswer(
     query: string,
-    options: BraveSearchOptions = {},
+    options: Omit<BraveSearchOptions, 'summary'> = {},
     summarizerOptions: SummarizerOptions = {},
   ): {
     summary: Promise<SummarizerSearchApiResponse | undefined>;
