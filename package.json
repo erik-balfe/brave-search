@@ -1,7 +1,7 @@
 {
   "name": "brave-search",
-  "version": "0.6.0",
-  "description": "A TypeScript library for interacting with the Brave Search API, including web search, local POI search, and automatic summarization features.",
+  "version": "0.6.1",
+  "description": "A fully typed Brave Search API wrapper, providing easy access to web search, local POI search, and automatic polling for web search summary feature.",
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build"

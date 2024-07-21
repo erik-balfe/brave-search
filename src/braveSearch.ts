@@ -28,9 +28,18 @@ import {
   WebSearchApiResponse,
 } from "./types";
 
+/**
+ * An error class specific to BraveSearch API interactions.
+ * It includes additional information about the response data that caused the error.
+ */
 class BraveSearchError extends Error {
   public responseData: any;
 
+  /**
+   * Initializes a new instance of the BraveSearchError class.
+   * @param message The error message.
+   * @param responseData The response data that caused the error.
+   */
   constructor(message: string, responseData?: any) {
     super(message);
     this.name = "BraveSearchError";
@@ -38,12 +47,23 @@ class BraveSearchError extends Error {
   }
 }
 
+/**
+ * The main class for interacting with the Brave Search API.
+ * It provides methods for web search, local POI search, and summarization.
+ */
 class BraveSearch {
   private apiKey: string;
   private baseUrl = "https://api.search.brave.com/res/v1";
   private pollInterval = 500;
   private maxPollAttempts = DEFAULT_POLLING_TIMEOUT / this.pollInterval;
 
+  /**
+   * Initializes a new instance of the BraveSearch class.
+   * @param apiKey The API key for accessing the Brave Search API.
+   * @param options Optional settings to configure the search behavior.
+   *  - maxPollAttempts: Maximum number of attempts to poll for a summary.
+   *  - pollInterval: Interval in milliseconds between polling attempts.
+   */
   constructor(apiKey: string, options?: { maxPollAttempts?: number; pollInterval?: number }) {
     this.apiKey = apiKey;
     if (options) {
@@ -52,6 +72,12 @@ class BraveSearch {
     }
   }
 
+  /**
+   * Performs a web search using the provided query and options.
+   * @param query The search query string.
+   * @param options Optional settings to configure the search behavior.
+   * @returns A promise that resolves to the search results.
+   */
   async webSearch(query: string, options: BraveSearchOptions = {}): Promise<WebSearchApiResponse> {
     const params = new URLSearchParams({
       q: query,
@@ -72,9 +98,16 @@ class BraveSearch {
     }
   }
 
+  /**
+   * Executes a web search for the provided query and polls for a summary if available.
+   * @param query The search query string.
+   * @param options Optional settings to configure the search behavior.
+   * @param summarizerOptions Optional settings specific to summarization.
+   * @returns An object containing promises for the web search results and the summarized answer.
+   */
   getSummarizedAnswer(
     query: string,
-    options: Omit<BraveSearchOptions, 'summary'> = {},
+    options: Omit<BraveSearchOptions, "summary"> = {},
     summarizerOptions: SummarizerOptions = {},
   ): {
     summary: Promise<SummarizerSearchApiResponse | undefined>;
@@ -98,6 +131,12 @@ class BraveSearch {
     }
   }
 
+  /**
+   * Searches for local points of interest using the provided IDs and options.
+   * @param ids The IDs of the local points of interest.
+   * @param options Optional settings to configure the search behavior.
+   * @returns A promise that resolves to the search results.
+   */
   async localPoiSearch(ids: string[], options: LocalPoiOptions = {}): Promise<LocalPoiSearchApiResponse> {
     const params = new URLSearchParams({
       ids: ids.join(","),
@@ -117,6 +156,12 @@ class BraveSearch {
     }
   }
 
+  /**
+   * Retrieves descriptions for local points of interest using the provided IDs and options.
+   * @param ids The IDs of the local points of interest.
+   * @param options Optional settings to configure the search behavior.
+   * @returns A promise that resolves to the search results.
+   */
   async localDescriptionsSearch(
     ids: string[],
     options: LocalDescriptionsOptions = {},
