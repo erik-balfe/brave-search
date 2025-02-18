@@ -2600,6 +2600,14 @@ export interface Image {
 }
 
   /**
+   * Options for image search
+   * 
+   * https://api-dashboard.search.brave.com/app/documentation/image-search/query
+   */
+  export interface ImageSearchOptions extends Pick<BraveSearchOptions, 'country' | 'search_lang' | 'safesearch' | 'spellcheck' | 'count'> {
+  }
+
+  /**
    * Response from the Brave Search API for an Image search
    * 
    * https://api-dashboard.search.brave.com/app/documentation/image-search/responses

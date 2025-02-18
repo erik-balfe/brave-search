@@ -21,6 +21,7 @@ const DEFAULT_MAX_POLL_ATTEMPTS = 20;
 import {
   BraveSearchOptions,
   ImageSearchApiResponse,
+  ImageSearchOptions,
   LocalDescriptionsSearchApiResponse,
   LocalPoiSearchApiResponse,
   PollingOptions,
@@ -100,7 +101,7 @@ class BraveSearch {
     }
   }
 
-    /**
+  /**
    * Performs an image search using the provided query and options.
    * @param query The search query string.
    * @param options Optional settings to configure the search behavior.
@@ -108,7 +109,7 @@ class BraveSearch {
    */
   async imageSearch(
     query: string,
-    options: BraveSearchOptions = {},
+    options: ImageSearchOptions = {},
     signal?: AbortSignal,
   ): Promise<ImageSearchApiResponse> {
     const params = new URLSearchParams({
@@ -321,6 +322,7 @@ export {
   BraveSearch,
   BraveSearchError,
   type BraveSearchOptions,
+  type ImageSearchOptions,
   type LocalDescriptionsSearchApiResponse,
   type LocalPoiSearchApiResponse,
   type SummarizerOptions,
