@@ -20,6 +20,8 @@ const DEFAULT_MAX_POLL_ATTEMPTS = 20;
 
 import {
   BraveSearchOptions,
+  ImageSearchApiResponse,
+  ImageSearchOptions,
   LocalDescriptionsSearchApiResponse,
   LocalPoiSearchApiResponse,
   PollingOptions,
@@ -49,7 +51,7 @@ class BraveSearchError extends Error {
 
 /**
  * The main class for interacting with the Brave Search API, holding API key for all the requests made with it.
- * It provides methods for web search, local POI search, and summarization.
+ * It provides methods for web search, image search, local POI search, and summarization.
  */
 class BraveSearch {
   private apiKey: string;
@@ -92,6 +94,36 @@ class BraveSearch {
           signal,
         },
       );
+      return response.data;
+    } catch (error) {
+      const handledError = this.handleApiError(error);
+      throw handledError;
+    }
+  }
+
+  /**
+   * Performs an image search using the provided query and options.
+   * @param query The search query string.
+   * @param options Optional settings to configure the search behavior.
+   * @returns A promise that resolves to the image search results.
+   */
+  async imageSearch(
+    query: string,
+    options: ImageSearchOptions = {},
+    signal?: AbortSignal,
+  ): Promise<ImageSearchApiResponse> {
+    const params = new URLSearchParams({
+      q: query,
+      ...this.formatOptions(options),
+    })
+    try {
+      const response = await axios.get<ImageSearchApiResponse>(
+        `${this.baseUrl}/images/search?${params.toString()}`,
+        {
+          headers: this.getHeaders(),
+          signal,
+        }
+      )
       return response.data;
     } catch (error) {
       const handledError = this.handleApiError(error);
@@ -290,9 +322,11 @@ export {
   BraveSearch,
   BraveSearchError,
   type BraveSearchOptions,
+  type ImageSearchOptions,
   type LocalDescriptionsSearchApiResponse,
   type LocalPoiSearchApiResponse,
   type SummarizerOptions,
   type SummarizerSearchApiResponse,
   type WebSearchApiResponse,
+  type ImageSearchApiResponse,
 };

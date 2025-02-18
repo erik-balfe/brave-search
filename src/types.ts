@@ -2598,3 +2598,100 @@ export interface Image {
    */
   properties: ImageProperties;
 }
+
+  /**
+   * Options for image search
+   * 
+   * https://api-dashboard.search.brave.com/app/documentation/image-search/query
+   */
+  export interface ImageSearchOptions extends Pick<BraveSearchOptions, 'country' | 'search_lang' | 'safesearch' | 'spellcheck' | 'count'> {
+  }
+
+  /**
+   * Response from the Brave Search API for an Image search
+   * 
+   * https://api-dashboard.search.brave.com/app/documentation/image-search/responses
+   */
+  export interface ImageSearchApiResponse {
+    /**
+     * The type of search API result. The value is always images.
+     * @type {string}
+     */
+    type: 'images'
+    /**
+     * Image search query string.
+     * @type {Query}
+     */
+    query: Query
+    /**
+     * The list of image results for the given query.
+     * @type {ImageResult[]}
+     */
+    results: ImageResult[]
+  }
+
+  /**
+   * A model representing an image result for the requested query.
+   * 
+   * https://api-dashboard.search.brave.com/app/documentation/image-search/responses#ImageResult
+   */
+  export interface ImageResult {
+    /**
+     * The type of image search API result. The value is always image_result.
+     * @type {string}
+     */
+    type: 'image_result'
+    /**
+     * The title of the image.
+     * @type {string} 
+     */
+    title: string
+    /**
+     * The original page url where the image was found.
+     * @type {string}
+     */
+    url: string
+    /**
+     * The source domain where the image was found.
+     * @type {string}
+     */
+    source: string
+    /**
+     * The iso date time when the page was last fetched. The format is YYYY-MM-DDTHH:MM:SSZ
+     * @type {string}
+     */
+    page_fetched: string
+    /**
+     * The thumbnail for the image.
+     * @type {Thumbnail}
+     */
+    thumbnail: Thumbnail
+    /**
+     * Metadata for the image
+     * @type {Properties}
+     */
+    properties: Properties
+    /**
+     * Aggregated information on the url associated with the image search result.
+     * @type {MetaUrl}
+     */
+    meta_url: MetaUrl
+  }
+
+  /**
+   * Metadata on an image.
+   * 
+   * https://api-dashboard.search.brave.com/app/documentation/image-search/responses#Properties
+   */
+  export interface Properties {
+    /**
+     * The image URL.
+     * @type {string}
+     */
+    url: string
+    /**
+     * The lower resolution placeholder image url.
+     * @type {string}
+     */
+    placeholder: string
+  }
