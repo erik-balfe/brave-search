@@ -1,6 +1,6 @@
 {
   "name": "brave-search",
-  "version": "0.6.5",
+  "version": "0.7.0",
   "description": "A fully typed Brave Search API wrapper, providing easy access to web search, local POI search, and automatic polling for web search summary feature.",
   "scripts": {
     "build": "tsc",
