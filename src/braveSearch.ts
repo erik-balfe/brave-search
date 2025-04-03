@@ -24,6 +24,8 @@ import {
   ImageSearchOptions,
   LocalDescriptionsSearchApiResponse,
   LocalPoiSearchApiResponse,
+  NewsSearchApiResponse,
+  NewsSearchOptions,
   PollingOptions,
   SummarizerOptions,
   SummarizerSearchApiResponse,
@@ -124,6 +126,31 @@ class BraveSearch {
           signal,
         }
       )
+      return response.data;
+    } catch (error) {
+      const handledError = this.handleApiError(error);
+      throw handledError;
+    }
+  }
+
+  async newsSearch(
+    query: string,
+    options: NewsSearchOptions = {},
+    signal?: AbortSignal,
+  ) : Promise<NewsSearchApiResponse> {
+    const params = new URLSearchParams({
+      q: query,
+      ...this.formatOptions(options),
+    });
+
+    try {
+      const response = await axios.get<NewsSearchApiResponse>(
+        `${this.baseUrl}/news/search?${params.toString()}`,
+        {
+          headers: this.getHeaders(),
+          signal,
+        },
+      );
       return response.data;
     } catch (error) {
       const handledError = this.handleApiError(error);
@@ -329,4 +356,6 @@ export {
   type SummarizerSearchApiResponse,
   type WebSearchApiResponse,
   type ImageSearchApiResponse,
+  type NewsSearchApiResponse,
+  type NewsSearchOptions,
 };
