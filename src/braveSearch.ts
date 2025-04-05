@@ -138,15 +138,14 @@ class BraveSearch {
     options: NewsSearchOptions = {},
     signal?: AbortSignal,
   ) : Promise<NewsSearchApiResponse> {
-    const params = new URLSearchParams({
-      q: query,
-      ...this.formatOptions(options),
-    });
-
     try {
       const response = await axios.get<NewsSearchApiResponse>(
-        `${this.baseUrl}/news/search?${params.toString()}`,
+        `${this.baseUrl}/news/search?`,
         {
+          params: {
+            q: query,
+            ...this.formatOptions(options),
+          },
           headers: this.getHeaders(),
           signal,
         },
