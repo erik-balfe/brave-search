@@ -1,6 +1,6 @@
 # Brave Search API Wrapper
 
-A fully typed Brave Search API wrapper, providing easy access to web search, image search, local POI search, and automatic polling for AI-generated web search summary feature.
+A fully typed Brave Search API wrapper, providing easy access to web search, news search, image search, local POI search, and automatic polling for AI-generated web search summary feature.
 
 ## Installation
 
@@ -121,6 +121,19 @@ const imageSearchResults = await braveSearch.imageSearch("Golden Gate Bridge", {
   country: "US",
 });
 console.log(imageSearchResults);
+```
+
+### News Search
+
+Perform a News search using the 'newsSearch` method. Your IDE will provide type hints for the parameters and return types.
+
+```typescript
+const newsSearchResults = await braveSearch.newsSearch("Ghibli ChatGPT", {
+  count: 5, // Number of search results to return
+  search_lang: "en", // Optional: Language of the search results (default is "en")
+  extra_snippets: true, // Optional: Whether to include extra snippets (default is false)
+});
+console.log(newsSearchResults);
 ```
 
 ## Search Options

@@ -2695,3 +2695,34 @@ export interface Image {
      */
     placeholder: string
   }
+
+  /**
+   * Options for news search
+   * 
+   * https://api-dashboard.search.brave.com/app/documentation/news-search/query
+   */
+  export interface NewsSearchOptions extends Pick<BraveSearchOptions, 'country' | 'search_lang' | 'ui_lang' | 'count' | 'offset' | 'spellcheck' | 'safesearch' | 'freshness' | 'extra_snippets'> {
+  }
+
+  /**
+   * Response from the Brave Search API for a News search
+   * 
+   * https://api-dashboard.search.brave.com/app/documentation/news-search/responses#NewsSearchApiResponse
+   */
+  export interface NewsSearchApiResponse {
+    /**
+     * The type of search API result. The value is always news.
+     * @type {string}
+     */
+    type: 'news'
+    /**
+     * 	News search query string.
+     * * @type {Query}
+     */
+    query: Query
+    /**
+     * The list of news results for the given query.
+     * @type {NewsResult[]}
+     */
+    results: NewsResult[]
+  }
