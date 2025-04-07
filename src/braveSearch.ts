@@ -202,8 +202,9 @@ class BraveSearch {
       const response = await axios.get<LocalPoiSearchApiResponse>(
         `${this.baseUrl}/local/pois`,
         {
-          params: {
-            ids: ids.join(","),
+          params: { ids },
+          paramsSerializer: {
+            indexes: null
           },
           headers: this.getHeaders(),
           signal,
@@ -228,8 +229,9 @@ class BraveSearch {
       const response = await axios.get<LocalDescriptionsSearchApiResponse>(
         `${this.baseUrl}/local/descriptions`,
         {
-          params: {
-            ids: ids.join(","),
+          params: { ids },
+          paramsSerializer: {
+            indexes: null
           },
           headers: this.getHeaders(),
           signal,
