@@ -172,6 +172,27 @@ For detailed API reference, please refer to the [Brave Search API Documentation]
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## Version Management
+
+This package maintains consistent versioning across both npm (package.json) and Deno (deno.json) configurations. To release a new version:
+
+```shell
+# Release a new major version (1.0.0 -> 2.0.0)
+npm run release:major
+
+# Release a new minor version (1.0.0 -> 1.1.0)
+npm run release:minor
+
+# Release a new patch version (1.0.0 -> 1.0.1)
+npm run release:patch
+```
+
+These commands will:
+1. Update the version in package.json
+2. Automatically sync the new version to deno.json using the sync-versions.js script
+
+For CI/CD pipelines, you can also use the sync-versions.js script directly to ensure version consistency.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.

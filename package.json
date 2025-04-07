@@ -1,10 +1,13 @@
 {
   "name": "brave-search",
-  "version": "0.7.0",
+  "version": "0.9.0",
   "description": "A fully typed Brave Search API wrapper, providing easy access to web search, local POI search, and automatic polling for web search summary feature.",
   "scripts": {
     "build": "tsc",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "release:major": "npm version major && node scripts/sync-versions.js",
+    "release:minor": "npm version minor && node scripts/sync-versions.js",
+    "release:patch": "npm version patch && node scripts/sync-versions.js"
   },
   "main": "dist/braveSearch.js",
   "types": "dist/braveSearch.d.ts",

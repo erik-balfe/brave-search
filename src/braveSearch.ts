@@ -83,15 +83,14 @@ class BraveSearch {
     options: BraveSearchOptions = {},
     signal?: AbortSignal,
   ): Promise<WebSearchApiResponse> {
-    const params = new URLSearchParams({
-      q: query,
-      ...this.formatOptions(options),
-    });
-
     try {
       const response = await axios.get<WebSearchApiResponse>(
-        `${this.baseUrl}/web/search?${params.toString()}`,
+        `${this.baseUrl}/web/search`,
         {
+          params: {
+            q: query,
+            ...this.formatOptions(options),
+          },
           headers: this.getHeaders(),
           signal,
         },
@@ -114,14 +113,14 @@ class BraveSearch {
     options: ImageSearchOptions = {},
     signal?: AbortSignal,
   ): Promise<ImageSearchApiResponse> {
-    const params = new URLSearchParams({
-      q: query,
-      ...this.formatOptions(options),
-    })
     try {
       const response = await axios.get<ImageSearchApiResponse>(
-        `${this.baseUrl}/images/search?${params.toString()}`,
+        `${this.baseUrl}/images/search`,
         {
+          params: {
+            q: query,
+            ...this.formatOptions(options),
+          },
           headers: this.getHeaders(),
           signal,
         }
@@ -199,14 +198,13 @@ class BraveSearch {
    * @returns A promise that resolves to the search results.
    */
   async localPoiSearch(ids: string[], signal?: AbortSignal): Promise<LocalPoiSearchApiResponse> {
-    const params = new URLSearchParams({
-      ids: ids.join(","),
-    });
-
     try {
       const response = await axios.get<LocalPoiSearchApiResponse>(
-        `${this.baseUrl}/local/pois?${params.toString()}`,
+        `${this.baseUrl}/local/pois`,
         {
+          params: {
+            ids: ids.join(","),
+          },
           headers: this.getHeaders(),
           signal,
         },
@@ -226,14 +224,13 @@ class BraveSearch {
     ids: string[],
     signal?: AbortSignal,
   ): Promise<LocalDescriptionsSearchApiResponse> {
-    const params = new URLSearchParams({
-      ids: ids.join(","),
-    });
-
     try {
       const response = await axios.get<LocalDescriptionsSearchApiResponse>(
-        `${this.baseUrl}/local/descriptions?${params.toString()}`,
+        `${this.baseUrl}/local/descriptions`,
         {
+          params: {
+            ids: ids.join(","),
+          },
           headers: this.getHeaders(),
           signal,
         },
@@ -287,15 +284,14 @@ class BraveSearch {
     options: SummarizerOptions,
     signal?: AbortSignal,
   ): Promise<SummarizerSearchApiResponse> {
-    const params = new URLSearchParams({
-      key,
-      ...this.formatOptions(options),
-    });
-
     try {
       const response = await axios.get<SummarizerSearchApiResponse>(
-        `${this.baseUrl}/summarizer/search?${params.toString()}`,
+        `${this.baseUrl}/summarizer/search`,
         {
+          params: {
+            key,
+            ...this.formatOptions(options),
+          },
           headers: this.getHeaders(),
           signal,
         },
