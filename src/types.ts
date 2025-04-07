@@ -1488,6 +1488,21 @@ export interface VideoData {
    * @type {Thumbnail}
    */
   thumbnail: Thumbnail;
+  /**
+   * Whether the video requires a subscription.
+   * @type {boolean}
+   */
+  requires_subscription?: boolean;
+  /**
+   * A list of tags relevant to the video.
+   * @type {string[]}
+   */
+  tags?: string[];
+    /**
+   * A profile associated with the video.
+   * @type {Profile}
+   */
+  author?: Profile;
 }
 
 export interface MovieData {
@@ -2726,3 +2741,34 @@ export interface Image {
      */
     results: NewsResult[]
   }
+
+  /**
+   * Options for video search
+   * 
+   * https://api-dashboard.search.brave.com/app/documentation/video-search/query
+   */
+  export interface VideoSearchOptions extends Pick<BraveSearchOptions, 'country' | 'search_lang' | 'ui_lang' | 'count' | 'offset' | 'spellcheck' | 'safesearch' | 'freshness'> {
+  }
+
+  /**
+ * Response from the Brave Search API for video search.
+ *
+ * https://api-dashboard.search.brave.com/app/documentation/video-search/responses
+ */
+export interface VideoSearchApiResponse {
+  /**
+   * The type of search API result. The value is always video.
+   * @type {string}
+   */
+  type: 'video';
+  /**
+   * Video search query string.
+   * @type {Query}
+   */
+  query: Query;
+  /**
+   * The list of video results for the given query.
+   * @type {VideoResult[]}
+   */
+  results: VideoResult[];
+}
