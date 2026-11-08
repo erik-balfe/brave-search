@@ -6,12 +6,13 @@ on:
       - "v*"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write # OIDC: lets npm verify this exact workflow instead of a stored token
+
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v5
 
@@ -19,10 +20,17 @@ jobs:
         with:
           bun-version: 1.4.4
 
+      # Trusted publishing needs Node >= 22.14.0 and npm >= 11.5.1.
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "22.14.0"
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - name: Verify npm version supports OIDC publishing
+        run: |
+          npm install --global npm@latest
+          npm --version
 
       - run: bun install --frozen-lockfile
 
@@ -32,10 +40,12 @@ jobs:
           bun test
           bun run build
 
+      # No NODE_AUTH_TOKEN on purpose: the npm CLI detects the OIDC environment,
+      # exchanges the token for short-lived registry credentials, and attaches a
+      # provenance statement. Requires a Trusted Publisher configured for
+      # erik-balfe/brave-search -> publish.yml on npmjs.com.
       - name: Publish to npm
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to JSR
         run: npx --yes jsr publish
