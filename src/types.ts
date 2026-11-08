@@ -131,6 +131,12 @@ export interface PollingOptions {
    * @default 20
    */
   maxPollAttempts?: number;
+  /**
+   * Override the API base URL. Useful for a proxy or a local test server.
+   * @type {string}
+   * @default "https://api.search.brave.com/res/v1"
+   */
+  baseUrl?: string;
 }
 
 /**
@@ -143,6 +149,13 @@ export interface SummarizerOptions {
    * @default "false"
    */
   entity_info?: boolean;
+  /**
+   * Adds inline reference markers to the summary text, so each statement can be
+   * traced to its source.
+   * @type {boolean}
+   * @default "false"
+   */
+  inline_references?: boolean;
 }
 
 // Response types
