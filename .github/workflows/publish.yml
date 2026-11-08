@@ -1,38 +1,41 @@
-name: Publish to jsr and npm
+name: Publish to JSR and npm
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - "v*"
+  workflow_dispatch:
 
 jobs:
-  publish-to-npm:
+  publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: "20.12.2"
+          bun-version: 1.4.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
           registry-url: "https://registry.npmjs.org"
-      - run: npm ci
-      - run: npm run build
-      - run: npm publish
+
+      - run: bun install --frozen-lockfile
+
+      - name: Verify before publishing
+        run: |
+          bun check
+          bun test
+          bun run build
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-    permissions:
-      contents: read
-      id-token: write
 
-  publish-to-jsr:
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - run: npm ci
-      - name: Publish package
-        run: npx jsr publish
+      - name: Publish to JSR
+        run: npx --yes jsr publish
