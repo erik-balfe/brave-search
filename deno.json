@@ -1,5 +1,5 @@
 {
   "name": "@tyr/brave-search",
-  "version": "0.9.0",
-  "exports": "./src/braveSearch.ts"
+  "version": "1.0.0",
+  "exports": "./src/index.ts"
 }

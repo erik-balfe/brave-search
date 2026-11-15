@@ -1,202 +1,255 @@
 # Brave Search API Wrapper
 
-A fully typed Brave Search API wrapper, providing easy access to web search, news search, image search, local POI search, and automatic polling for AI-generated web search summary feature.
+[![npm](https://img.shields.io/npm/v/brave-search.svg)](https://www.npmjs.com/package/brave-search)
+[![JSR](https://jsr.io/badges/@tyr/brave-search)](https://jsr.io/@tyr/brave-search)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
+
+A typed wrapper for the Brave Search API. ESM and CJS, zero runtime dependencies.
+
+## What Brave ships in 2026, and which method to use
+
+Brave split its API into four products with different jobs. Picking the wrong one is
+the usual reason an integration feels slow or expensive:
+
+| You want | Endpoint | Method | Plan |
+|---|---|---|---|
+| Ranked links and snippets for a human | `/web/search` | `webSearch()` | Search |
+| **Grounding context for a model** | `/llm/context` | `llmContext()` | Search + LLM Context |
+| A finished answer with citations | `/chat/completions` (`model: "brave"`) | *not in this package* | Answers |
+| News, images, videos | `/news/search`, `/images/search`, `/videos/search` | `newsSearch()`, `imageSearch()`, `videoSearch()` | Search |
+| Businesses, landmarks, "near me" | `/local/place_search` | `placeSearch()` | Search |
+| AI summary of a web query | `/summarizer/search` | `getSummarizedAnswer()` | **deprecated** |
+
+If you are feeding a model, `llmContext()` is what Brave recommends: extracted,
+relevance-scored passages and a token budget, instead of snippets you then have to fetch
+and parse yourself. `webSearch()` stays the right call when a human reads the output, or
+when you need the raw result shapes.
+
+The Answers product is a separate plan and a separate response contract, so it is
+deliberately not part of this package.
 
 ## Installation
 
-### Using npm
-
-Install the package using npm:
-
 ```shell
-npm install brave-search
+npm install brave-search      # npm
+bun add brave-search          # bun
+npx jsr add @tyr/brave-search # jsr
 ```
-
-### Using jsr registry
-
-If you prefer to use the jsr registry, you can add the package using the following commands:
-
-```shell
-npx jsr add @tyr/brave-search
-```
-
-## Importing the Package
-
-### Using npm
-
-Import the package in your project:
 
 ```typescript
-import { BraveSearch } from "brave-search";
+import { BraveSearch, SafeSearchLevel } from "brave-search";
+// or from JSR: import { BraveSearch } from "@tyr/brave-search";
 ```
 
-### Using jsr registry
-
-If you are using the jsr registry, import the package as follows:
+Get an API key at the [Brave Search API dashboard](https://api.search.brave.com/app/keys), then:
 
 ```typescript
-import { BraveSearch } from "@tyr/brave-search/";
+const braveSearch = new BraveSearch(process.env.BRAVE_API_KEY!);
 ```
 
-## Getting Started
+The constructor rejects an empty key, a negative `pollInterval`, and `maxPollAttempts < 1` immediately, so a misconfiguration fails at startup rather than on the first request.
 
-1. Obtain a Brave Search API key from [Brave Search API Dashboard](https://api.search.brave.com/app/keys).
-
-2. Install the package using one of the methods above.
-
-3. Initialize the `BraveSearch` class:
-   ```typescript
-   const BRAVE_API_KEY = "your-api-key-here";
-   const braveSearch = new BraveSearch(BRAVE_API_KEY);
-   ```
-
-## Usage
-
-### Web Search
-
-Perform a web search using the `webSearch` method. Your IDE will provide type hints for the parameters and return types.
+## Web search
 
 ```typescript
-const webSearchResults = await braveSearch.webSearch("How many stars there are in our galaxy?", {
-  count: 5,
-  safesearch: "off",
+const results = await braveSearch.webSearch("how many stars are in our galaxy", {
+  count: 5,                       // 1..20
+  offset: 0,                      // 0..9
+  safesearch: SafeSearchLevel.Off,
   search_lang: "en",
+  ui_lang: "en-US",
   country: "US",
   text_decorations: false,
+  extra_snippets: true,
 });
-console.log(webSearchResults);
+console.log(results.web?.results);
 ```
 
-### Summarized Search
+Options are validated before the request is made: `count` outside 1..20, `offset` outside 0..9, an unknown key, a bad `safesearch`/`units` value, or a malformed `freshness` throws a `BraveSearchError` without touching the network. This is what stops a typo from becoming a 422 from Brave in production.
 
-Get a summarized answer for a query using the `getSummarizedAnswer` method. This method returns an object containing `summary` and `webSearch` promises.
+## Grounding a model
 
 ```typescript
-const { summary, webSearch } = braveSearch.getSummarizedAnswer("How many stars there are in our galaxy?", {
-  count: 5, // Number of search results to return
-  safesearch: "off", // Optional: Filter for adult content (default is "moderate")
-  search_lang: "en", // Optional: Language of the search results (default is "en")
-  country: "US", // Optional: Country for the search results (default is "us")
-  text_decorations: false, // Optional: Whether to include text decorations (default is true)
-  spellcheck: false, // Optional: Whether to enable spellcheck (default is true)
-  extra_snippets: true, // Optional: Whether to include extra snippets (default is false)
+const context = await braveSearch.llmContext("what is the tallest mountain in the solar system", {
+  maximum_number_of_tokens: 8000,        // 512 .. 32768
+  context_threshold_mode: "balanced",    // strict | balanced | lenient
+  freshness: "pm",
 });
 
-// Wait for the web search results (almost immediately)
-const webSearchResponse = await webSearch;
-console.log("Web Search Response:", JSON.stringify(webSearchResponse, null, 2));
-
-// Wait for the summarized answer (can take up to couple of seconds)
-const summarizedAnswer = await summary;
-console.log("Summarized Answer:", JSON.stringify(summarizedAnswer, null, 2));
+for (const source of context.grounding.sources ?? []) {
+  console.log(source.url, source.age);
+}
 ```
 
-### Local POI Search
+Requires a plan with LLM Context. A Search-only key answers with HTTP 400 and
+`OPTION_NOT_IN_PLAN`, which arrives as a `BraveSearchError`, so a feature-detect is one
+`try` away.
 
-Search for local points of interest using the `localPoiSearch` method.
+## Places
 
-```typescript
-const poiResults = await braveSearch.localPoiSearch(["poi_id1", "poi_id2"]);
-console.log(poiResults);
-```
-
-### Local Descriptions Search
-
-Get descriptions for local points of interest using the `localDescriptionsSearch` method.
+`placeSearch()` is the entry point for anything local since 2026: businesses, landmarks,
+"near me".
 
 ```typescript
-const descriptionResults = await braveSearch.localDescriptionsSearch(["poi_id1", "poi_id2"]);
-console.log(descriptionResults);
-```
-
-### Image Search 
-
-Perform an image search using the `imageSearch` method. Your IDE will provide type hints for the parameters and return types.
-
-```typescript
-const imageSearchResults = await braveSearch.imageSearch("Golden Gate Bridge", {
-  count: 5,
-  safesearch: "off",
-  search_lang: "en",
-  country: "US",
+const nearby = await braveSearch.placeSearch({
+  q: "coffee",
+  latitude: 41.6938,
+  longitude: 44.8015,
+  radius: 1000,          // meters
+  count: 10,
 });
-console.log(imageSearchResults);
+
+const inCity = await braveSearch.placeSearch({ q: "sushi", location: "tbilisi" });
+
+// Explore mode: what is around here, no query
+const around = await braveSearch.placeSearch({ latitude: 41.6938, longitude: 44.8015 });
 ```
 
-### News Search
-
-Perform a News search using the 'newsSearch` method. Your IDE will provide type hints for the parameters and return types.
+Every result carries an `id`, which the detail endpoints accept:
 
 ```typescript
-const newsSearchResults = await braveSearch.newsSearch("Ghibli ChatGPT", {
-  count: 5, // Number of search results to return
-  search_lang: "en", // Optional: Language of the search results (default is "en")
-  extra_snippets: true, // Optional: Whether to include extra snippets (default is false)
-});
-console.log(newsSearchResults);
+const id = nearby.results[0]?.id as string;
+const poi = await braveSearch.localPoiSearch([id]);
+const described = await braveSearch.localDescriptionsSearch([id]);
 ```
 
-## Search Options
+A call with `q` but no anchor is rejected client-side: Brave needs coordinates or a
+location name to centre the search on.
 
-The library supports various search options as defined in the Brave Search API documentation. For a complete list of options and their descriptions, please refer to the [Brave Search API Documentation](https://api.search.brave.com/app/documentation/web-search/).
-
-### Polling Options
-
-The `BraveSearch` class supports configurable polling options for summarization. You can customize the polling interval and the maximum number of polling attempts by passing a `PollingOptions` object to the constructor.
+## News, images, videos
 
 ```typescript
-const braveSearch = new BraveSearch(BRAVE_API_KEY, {
-  pollInterval: 1000, // (default is 500ms)
-  maxPollAttempts: 30, // (default is 20)
+await braveSearch.newsSearch("Ghibli ChatGPT", { count: 5, freshness: "pw" });
+await braveSearch.imageSearch("Golden Gate Bridge", { count: 5 });
+await braveSearch.videoSearch("cosmic desktop tour", { count: 5 });
+```
+
+## AI summaries (deprecated upstream)
+
+Brave deprecated the Summarizer API in favour of Answers. These methods still answer
+today and are kept for existing callers, but new work should use `llmContext()` or the
+Answers endpoint.
+
+```typescript
+const { webSearch, summary } = braveSearch.getSummarizedAnswer(
+  "how many stars are in our galaxy",
+  { count: 5 },
+  { inline_references: true }, // keep source markers in the text
+);
+
+const results = await webSearch;   // arrives first
+const answer = await summary;      // polled until ready, or throws
+```
+
+`summary` resolves to `undefined` when Brave does not offer a summary for the query. It throws when generation fails or when polling runs out of attempts.
+
+Polling is configurable, and the summary of an earlier search can be fetched later without polling:
+
+```typescript
+const braveSearch = new BraveSearch(key, { pollInterval: 1000, maxPollAttempts: 30 });
+const later = await braveSearch.summarizerSearch(storedKey, { entity_info: true });
+```
+
+## Cancellation and timeouts
+
+Every method takes an optional third argument with `signal`, `timeout`, and `baseUrl`:
+
+```typescript
+const controller = new AbortController();
+setTimeout(() => controller.abort(), 3000);
+
+await braveSearch.webSearch("query", { count: 5 }, {
+  signal: controller.signal,
+  timeout: 5000,
 });
 ```
 
-## Important Notes
+An abort during summary polling stops the loop immediately instead of waiting out the interval.
 
-- The `summary` option and `getSummarizedAnswer` method are only available with the Brave "Data for AI pro" plan.
-- For detailed information about API usage, rate limits, and pricing, please visit the [Brave Search API Terms](https://brave.com/search/api/).
+## Errors
 
-## API Reference
+Every failure is a `BraveSearchError` with a `status` (undefined for network failures) and the parsed `responseData`:
 
-For detailed API reference, please refer to the [Brave Search API Documentation](https://api.search.brave.com/app/documentation/web-search/).
+```typescript
+import { BraveSearchError } from "brave-search";
 
-## Features
+try {
+  await braveSearch.webSearch("query");
+} catch (error) {
+  if (error instanceof BraveSearchError) {
+    if (error.status === 429) {
+      // back off and retry
+    }
+    console.error(error.message, error.status, error.responseData);
+  }
+}
+```
 
-- Web search
-- Automatic summarization with polling
-- Local POI search
-- Local descriptions search
-- Error handling for API requests
+`401` → authentication, `403` → plan does not allow the endpoint, `422` → invalid parameters, `429` → rate limit, `5xx` → Brave-side failure.
 
-## Contributing
+## Options reference
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+`webSearch()`, `newsSearch()`, `imageSearch()`, `videoSearch()`:
 
-## Version Management
+| Option | Notes |
+|---|---|
+| `count` | 1..20, results per page |
+| `offset` | 0..9, pages to skip |
+| `safesearch` | `off`, `moderate`, `strict` |
+| `freshness` | `pd`, `pw`, `pm`, `py`, `YYYY-MM-DDtoYYYY-MM-DD`, or `YYYY-MM-DD` |
+| `units` | `metric`, `imperial` |
+| `result_filter` | comma-separated result types |
+| `goggles_id` | custom re-ranking |
+| `summary` | enables the summarizer key in the response |
 
-This package maintains consistent versioning across both npm (package.json) and Deno (deno.json) configurations. To release a new version:
+`placeSearch()`: `q`, `location`, `latitude` + `longitude` (both or neither), `radius`
+(1..100000 m), `count` (1..20), `units`, `safesearch`, `spellcheck`, `freshness`.
+
+`llmContext()`: `maximum_number_of_tokens` (512..32768), `context_threshold_mode`
+(`strict`/`balanced`/`lenient`), `count` (1..50), locale and freshness filters.
+
+Full parameter semantics live in the [Brave Search API documentation](https://api.search.brave.com/app/documentation/web-search/).
+
+## Notes
+
+- The deprecated summary path needs a plan that still offers Summarizer.
+- LLM Context needs a plan that includes it; a Search-only key gets `OPTION_NOT_IN_PLAN`.
+- If you want a ready-made agent tool rather than a library, Brave publishes [`@brave/brave-search-mcp-server`](https://www.npmjs.com/package/@brave/brave-search-mcp-server). This package is the wrapper you call from your own code.
+- Not affiliated with Brave Software.
+
+## Development
+
+Bun 1.4.x runs everything: install, type check, tests, build, version bump.
 
 ```shell
-# Release a new major version (1.0.0 -> 2.0.0)
-npm run release:major
-
-# Release a new minor version (1.0.0 -> 1.1.0)
-npm run release:minor
-
-# Release a new patch version (1.0.0 -> 1.0.1)
-npm run release:patch
+bun install
+bun check               # type check (bun's built-in checker)
+bun test                # 64 unit tests, no network
+bun test:coverage       # same with a coverage table
+bun run build           # ESM + CJS + .d.ts into dist/
 ```
 
-These commands will:
-1. Update the version in package.json
-2. Automatically sync the new version to deno.json using the sync-versions.js script
+Contract tests hit the live API and are skipped without a key:
 
-For CI/CD pipelines, you can also use the sync-versions.js script directly to ensure version consistency.
+```shell
+BRAVE_API_KEY=... bun test test/contract.test.ts
+```
+
+They assert the real payload shapes and that every documented option is accepted by the
+server, so a silent API change fails a test instead of shipping a wrong type. On a
+Search-only plan the LLM Context check accepts a plan rejection and asserts it arrives as
+a `BraveSearchError`.
+
+Publishing runs on a `v*` tag: CI checks bun's type checker, the test suite, the build and
+`bun audit`, then publishes to npm and JSR. A bump rewrites `package.json` and `deno.json`
+together, so the two registries cannot drift:
+
+```shell
+bun run release:patch   # or release:minor / release:major
+git tag v$(bun -e 'console.log(JSON.parse(await Bun.file("package.json").text()).version)')
+git push --tags
+```
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
-
-## Disclaimer
-
-This library is not officially associated with Brave Software. It is a third-party implementation of the Brave Search API.
+GPL-3.0-or-later. See [LICENSE](LICENSE).

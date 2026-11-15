@@ -1,3 +1,4 @@
 node_modules
 dist
-.CLAUDE.MD
+*.tgz
+.DS_Store

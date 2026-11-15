@@ -1,50 +1,69 @@
 {
   "name": "brave-search",
-  "version": "0.9.0",
-  "description": "A fully typed Brave Search API wrapper, providing easy access to web search, local POI search, and automatic polling for web search summary feature.",
-  "scripts": {
-    "build": "tsc",
-    "prepare": "npm run build",
-    "release:major": "npm version major && node scripts/sync-versions.js",
-    "release:minor": "npm version minor && node scripts/sync-versions.js",
-    "release:patch": "npm version patch && node scripts/sync-versions.js"
+  "version": "1.0.0",
+  "description": "Typed Brave Search API wrapper: web, news, image, video, places and LLM grounding context.",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./package.json": "./package.json"
   },
-  "main": "dist/braveSearch.js",
-  "types": "dist/braveSearch.d.ts",
+  "sideEffects": false,
   "files": [
     "dist",
     "LICENSE",
     "README.md"
   ],
+  "scripts": {
+    "build:esm": "bun build src/index.ts --outdir dist/esm --target node --format esm --sourcemap=linked",
+    "build:cjs": "bun build src/index.ts --outdir dist/cjs --target node --format cjs --sourcemap=linked",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build": "rm -rf dist && bun run build:esm && bun run build:cjs && bun run build:types",
+    "typecheck": "bun check",
+    "test": "bun test",
+    "test:ci": "bun test --check",
+    "release:major": "bun scripts/bump-version.ts major",
+    "release:minor": "bun scripts/bump-version.ts minor",
+    "release:patch": "bun scripts/bump-version.ts patch",
+    "test:coverage": "bun test --coverage"
+  },
   "keywords": [
     "brave",
-    "web-search",
     "brave-search",
-    "search",
-    "api",
-    "search-engine",
     "web-search",
+    "search",
+    "search-engine",
+    "news-search",
+    "image-search",
+    "api",
+    "typescript",
     "web-api",
-    "search-results",
-    "data-retrieval",
     "information-retrieval",
-    "internet-search",
-    "brave-api",
-    "search-integration",
-    "web-scraping",
-    "data-mining"
+    "brave-api"
   ],
   "author": "erik.balfe@protonmail.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/erik-balfe/brave-search.git"
+    "url": "git+https://github.com/erik-balfe/brave-search.git"
+  },
+  "homepage": "https://github.com/erik-balfe/brave-search#readme",
+  "bugs": {
+    "url": "https://github.com/erik-balfe/brave-search/issues"
   },
   "license": "GPL-3.0-or-later",
-  "devDependencies": {
-    "@types/node": "^20.14.10",
-    "typescript": "^5.5.3"
+  "engines": {
+    "node": ">=18"
   },
-  "dependencies": {
-    "axios": "^1.7.2"
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "@types/node": "^24.0.0",
+    "axios": "^1.21.0",
+    "typescript": "^7.0.2"
   }
 }
