@@ -27,9 +27,11 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           package-manager-cache: false
 
-      - name: Verify npm version supports OIDC publishing
+      # Pinned major, not @latest: npm 12.x requires Node >= 22.22.2 and refuses
+      # to install on the Node this runner provides, which killed the first tag push.
+      - name: Upgrade npm for OIDC publishing
         run: |
-          npm install --global npm@latest
+          npm install --global npm@11
           npm --version
 
       - run: bun install --frozen-lockfile
