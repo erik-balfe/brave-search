@@ -1,6 +1,6 @@
 {
   "name": "brave-search",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Typed Brave Search API wrapper: web, news, image, video, places and LLM grounding context.",
   "type": "module",
   "main": "./dist/cjs/index.js",
@@ -22,7 +22,7 @@
   ],
   "scripts": {
     "build:esm": "bun build src/index.ts --outdir dist/esm --target node --format esm --sourcemap=linked",
-    "build:cjs": "bun build src/index.ts --outdir dist/cjs --target node --format cjs --sourcemap=linked",
+    "build:cjs": "bun build src/index.ts --outdir dist/cjs --target node --format cjs --sourcemap=linked && node -e \"require('fs').writeFileSync('dist/cjs/package.json',JSON.stringify({type:'commonjs'}))\"",
     "build:types": "tsc -p tsconfig.build.json",
     "build": "rm -rf dist && bun run build:esm && bun run build:cjs && bun run build:types",
     "typecheck": "bun check",

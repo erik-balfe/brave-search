@@ -27,6 +27,13 @@ jobs:
       - name: Build
         run: bun run build
 
+      # A build that exports nothing from the CJS entry is silent otherwise:
+      # require() returns an empty object and consumers get undefined.
+      - name: Smoke test both entry points
+        run: |
+          node -e "const m=require('./dist/cjs/index.js'); if(typeof m.BraveSearch!=='function'){throw new Error('CJS entry exports no BraveSearch')}; console.log('cjs keys:', Object.keys(m).length)"
+          node --input-type=module -e "import('./dist/esm/index.js').then(m=>{if(typeof m.BraveSearch!=='function')throw new Error('ESM entry exports no BraveSearch'); console.log('esm keys:', Object.keys(m).length)})"
+
       - name: Check packed contents
         run: bun pm pack --dry-run
 
